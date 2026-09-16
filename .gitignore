@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Build artifacts
+x64/
+Debug/
+Release/
+*.pyd
+*.dll
+*.lib
+*.exp
+*.pdb
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.user
+
+# Portable distribution contents
+python/
+args/
+data/
+env/
+learning/
+util/
+*.zip
+
+# OS
+Thumbs.db
+.DS_Store
