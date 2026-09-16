@@ -32,8 +32,6 @@ No installation is required. The distribution is fully portable and can be run f
 
 ## License
 
-## License
-
 The original DeepMimic source code is licensed under the MIT License.
 Copyright (c) 2018 Xue Bin Peng. See LICENSE for details.
 
