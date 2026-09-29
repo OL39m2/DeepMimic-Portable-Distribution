@@ -14,6 +14,48 @@ This distribution is based on **DeepMimic** by Xue Bin Peng. The original source
 - Original `args` and `data` directories
 - All necessary runtime DLLs (freeglut, GLEW, etc.)
 - Launcher (`run.bat`)
+- Launcher (`train.bat`)
+
+## Build Notes
+
+The `_DeepMimicCore.pyd` included in this distribution was compiled from the original DeepMimic source code, without modification. The build was performed in a new Visual Studio project, not the `DeepMimicCore.sln` solution provided with the original repository. This was done to allow full control over include paths, library paths, and linker settings.
+
+### Dependencies
+
+The following dependencies are used by this distribution. Bullet and freeglut were built from source using CMake. The remaining libraries were either header-only, pre-built, installed via pip, or installed separately.
+
+| Library | Version | Source / Method | Notes |
+| :--- | :--- | :--- | :--- |
+| Bullet | 2.88 | Built from source (CMake) | `USE_DOUBLE_PRECISION` disabled |
+| Eigen | 3.3.7 | Header-only | No build required |
+| freeglut | 3.0.0 | Built from source (CMake) | |
+| GLEW | 2.1.0 | Pre-built binaries | x64 |
+| Python | 3.7.0 | Embedded distribution | 64-bit |
+| SWIG | 4.0.0 | Pre-built executable | Used to generate the Python wrapper |
+| TensorFlow | 1.13.1 | Installed via pip | |
+| Microsoft MPI | v10.1.2 | Installed via Microsoft installer | Required for both running and training |
+
+### Build Steps
+
+1. The original C++ source files were copied into a new Visual Studio project.
+2. Include directories were configured for Bullet, Eigen, freeglut, GLEW, and Python.
+3. Library directories were configured to point to the `.lib` files produced by the CMake builds.
+4. Additional dependencies were specified in the linker settings: `BulletCollision.lib`, `BulletDynamics.lib`, `LinearMath.lib`, `freeglut.lib`, `glew32.lib`, and `python37.lib`.
+5. The preprocessor definition `_CRT_SECURE_NO_WARNINGS` and `_USE_MATH_DEFINES` were added.
+6. The runtime library was set to `Multi-threaded (/MT)` to match the Bullet build.
+7. SWIG was invoked manually to generate `DeepMimicCore_wrap.cxx` and `DeepMimicCore.py`:
+```
+swig -c++ -python -o DeepMimicCore_wrap.cxx DeepMimicCore.i
+```
+9. The generated wrapper was added to the project, with precompiled headers disabled for that file.
+10. The project was built in `Release` mode for `x64`, producing `_DeepMimicCore.pyd`.
+11. The resulting `.pyd` was placed alongside `DeepMimicCore.py` in the distribution root.
+
+### Notes
+
+- The build was performed with Visual Studio 2026 (version 18.9.2).
+- The `protobuf` package was pinned to version `3.20.1` to remain compatible with TensorFlow 1.13.1.
+- No changes were made to the original C++ source code, the simulation logic, or the learning algorithms.
 
 ## Usage
 
