@@ -14,11 +14,12 @@ This distribution is based on **DeepMimic** by Xue Bin Peng. The original source
 - Original `args` and `data` directories
 - All necessary runtime DLLs (freeglut, GLEW, etc.)
 - Launcher (`run.bat`)
-- Launcher (`train.bat`)
+- Launcher for training new policies (`train.bat`)
+- Microsoft MPI installers included in the `prerequisites/` folder
 
 ## Build Notes
 
-The `_DeepMimicCore.pyd` included in this distribution was compiled from the original DeepMimic source code, without modification. The build was performed in a new Visual Studio project, not the `DeepMimicCore.sln` solution provided with the original repository. This was done to allow full control over include paths, library paths, and linker settings.
+The _DeepMimicCore.pyd included in this distribution was compiled from the original DeepMimic source code, without modification. The build was performed in a new Visual Studio project, not the DeepMimicCore.sln solution provided with the original repository. This was done to allow full control over include paths, library paths, and linker settings.
 
 ### Dependencies
 
@@ -47,12 +48,11 @@ The following dependencies are used by this distribution. Bullet and freeglut we
 ```
 swig -c++ -python -o DeepMimicCore_wrap.cxx DeepMimicCore.i
 ```
-9. The generated wrapper was added to the project, with precompiled headers disabled for that file.
-10. The project was built in `Release` mode for `x64`, producing `_DeepMimicCore.pyd`.
-11. The resulting `.pyd` was placed alongside `DeepMimicCore.py` in the distribution root.
+8. The generated wrapper was added to the project, with precompiled headers disabled for that file.
+9. The project was built in `Release` mode for `x64`, producing `_DeepMimicCore.pyd`.
+10. The resulting `.pyd` was placed alongside `DeepMimicCore.py` in the distribution root.
 
 ### Notes
-
 - The build was performed with Visual Studio 2026 (version 18.9.2).
 - The `protobuf` package was pinned to version `3.20.1` to remain compatible with TensorFlow 1.13.1.
 - No changes were made to the original C++ source code, the simulation logic, or the learning algorithms.
@@ -63,9 +63,6 @@ swig -c++ -python -o DeepMimicCore_wrap.cxx DeepMimicCore.i
 2. Run `run.bat`. 
 3. Select a scene from the menu.
 4. The simulation window will open. Use the mouse to control the camera and interact with the character.
-- Launcher for training new policies `train.bat`.
-- Microsoft MPI installers included in the `prerequisites/` folder.
-
 
 ### Training New Policies
 
