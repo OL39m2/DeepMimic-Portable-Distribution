@@ -7,7 +7,6 @@ __pycache__/
 x64/
 Debug/
 Release/
-*.pyd
 *.dll
 *.lib
 *.exp
