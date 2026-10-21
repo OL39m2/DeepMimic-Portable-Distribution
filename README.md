@@ -106,8 +106,7 @@ The original DeepMimic source code is licensed under the MIT License.
 Copyright (c) 2018 Xue Bin Peng. See LICENSE for details.
 
 The packaging scripts, launcher, and documentation in this distribution
-are Copyright (c) 2026 OL39m2. All rights reserved.
-They are not licensed under the MIT License.
+are Copyright (c) 2026 OL39m2 and are licensed under the MIT License.
 
 The Microsoft MPI installers included in the `prerequisites/` folder are redistributed under the terms of the Microsoft MPI License Agreement. For full terms and conditions, refer to the license agreement included with the Microsoft MPI installer.
 
