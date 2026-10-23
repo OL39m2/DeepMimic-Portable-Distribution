@@ -4,7 +4,7 @@ A self-contained, portable Windows x64 distribution of DeepMimic, designed to el
 
 ## Original Project
 
-This distribution is based on **DeepMimic** by Xue Bin Peng. The original source code is available at [https://github.com/xbpeng/DeepMimic](https://github.com/xbpeng/DeepMimic). The code in this distribution is **unmodified** from the original repository. No changes have been made to the simulation, learning algorithms, or scenes.
+This distribution is based on **DeepMimic** by Xue Bin Peng. The original source code is available at [https://github.com/xbpeng/DeepMimic](https://github.com/xbpeng/DeepMimic). The simulation, scenes, and learning algorithm are unmodified from the original repository. A small number of Python files were modified to support checkpoint resume and Windows compatibility; see "Modifications to Original Code" for details.
 
 ## Contents
 
@@ -16,10 +16,15 @@ This distribution is based on **DeepMimic** by Xue Bin Peng. The original source
 - Launcher (`run.bat`)
 - Launcher for training new policies (`train.bat`)
 - Microsoft MPI installers included in the `prerequisites/` folder
+- Motion converter (`convert_motion.bat` + `motion_converter/`)
+- `InputBvh/` folder for user-provided BVH files
+- `data/motions/custom/` folder for converted motions
+- Sample args for custom motions (`train_custom_motion_args.txt`, `run_custom_args.txt`)
 
 ## Build Notes
 
-The _DeepMimicCore.pyd included in this distribution was compiled from the original DeepMimic source code, without modification. The build was performed in a new Visual Studio project, not the DeepMimicCore.sln solution provided with the original repository. This was done to allow full control over include paths, library paths, and linker settings.
+- The _DeepMimicCore.pyd included in this distribution was compiled from the original DeepMimic source code, without modification. The build was performed in a new Visual Studio project, not the DeepMimicCore.sln solution provided with the original repository. This was done to allow full control over include paths, library paths, and linker settings.
+- No changes were made to the original C++ source code or simulation logic. Three Python files (`learning/tf_agent.py`, `learning/rl_agent.py`, and `mpi_run.py`) were modified to support checkpoint resume and Windows compatibility; see the "Modifications to Original Code" section.
 
 ### Dependencies
 
@@ -55,7 +60,7 @@ swig -c++ -python -o DeepMimicCore_wrap.cxx DeepMimicCore.i
 ### Notes
 - The build was performed with Visual Studio 2026 (version 18.9.2).
 - The `protobuf` package was pinned to version `3.20.1` to remain compatible with TensorFlow 1.13.1.
-- No changes were made to the original C++ source code, the simulation logic, or the learning algorithms.
+- No changes were made to the original C++ source code or simulation logic. The learning algorithm itself is unmodified; only the checkpoint save/load mechanism was extended (see "Modifications to Original Code").
 
 ## Usage
 
@@ -77,28 +82,66 @@ Training new policies requires Microsoft MPI. The installers are included in the
 
 Training progress is displayed in the console window. No visualization window is opened during training, as rendering is disabled to maximize performance. Training output, including checkpoint files, is saved to the `output/` directory.
 
-### Training on Custom Motion Capture Data
+## Adding Custom Motions
 
-Training on custom motion capture data requires the data to be converted into the DeepMimic JSON format before it can be used.
+The distribution includes a converter that transforms BVH motion capture files into the DeepMimic JSON format.
 
-1. Prepare your motion capture data in either **BVH** or **FBX** format.
-2. Convert the data to DeepMimic JSON format using an appropriate conversion tool. The following tools are available:
-   - **BvhToDeepMimic**: Converts BVH files to DeepMimic JSON format.
-   - **FbxToMimic**: Converts FBX files to DeepMimic JSON format (under development).
-3. Place the converted JSON file in the `data/motions/` directory.
-4. Create a new training args file (or copy an existing one) and update the `--motion_file` parameter to point to your new motion file.
-5. Update the `--char_file` and `--scene` parameters if your motion data uses a different character or scene.
-6. Run the training script with your new args file.
+### Steps
 
-Note that the conversion process requires manual rigging, where each bone in your motion capture skeleton must be mapped to the corresponding joint in the DeepMimic character model. Incorrect rigging will result in distorted motion.
+1. Place your `.bvh` file in the `InputBvh/` folder.
+2. Run `convert_motion.bat` and select the file from the menu.
+3. The converted file is saved to `data/motions/custom/` with the same base name.
+4. Run `run.bat` or `train.bat` and select the "Custom motion" option.
+5. For training, select the motion from the list, choose the number of workers, and choose whether to start a new training session or resume from a checkpoint.
 
+The launcher passes `--motion_file` on the command line, which overrides the value in the args file. If you encounter issues, you can also edit the `--motion_file` line in `args/train_custom_motion_args.txt` or `args/run_custom_args.txt` directly.
+
+### Compatibility
+
+The converter is configured for **SFU MoCap Database** BVH files. Files from other sources (e.g., CMU) use different joint names and will fail with `LookupError: Joint name not found`. In that case, `motion_converter/settings.json` must be edited manually to map the joint names.
+
+This feature is **experimental**. Results depend on the quality of the BVH file and the joint mapping. Training typically requires several million samples and may take several hours on a small number of workers.
+
+### Data Source
+
+The sample motion (`0005_Jogging001.txt`) was converted from a BVH file obtained from the **SFU Motion Capture Database** (https://mocap.cs.sfu.ca/). The original data is subject to SFU's terms of use. Users who wish to redistribute converted motions should verify the licensing terms with SFU.
+
+### Included Sample
+
+The distribution includes a sample custom motion (`0005_Jogging001.txt`) and its trained checkpoint (`output/agent0_model.ckpt`) as a demonstration of the custom motion pipeline.
+
+- **Source**: SFU MoCap Database BVH file
+- **Training**: ~19.5 million samples, 2-3 workers, approximately 19–22 hours
+- **Training metrics**: `Train_Return` ≈ 43–45, `State_Std` ≈ 1.02, `Test_Return` ≈ 123
+
+Note: The high `Train_Return` reflects the cumulative task reward over a long episode (the character walks continuously). It does not directly indicate motion fidelity to the reference.
+
+The sample serves as a reference for the expected training duration and result quality on a small number of workers. Results will vary depending on the BVH file and the joint mapping.
 
 ## Notes
 
 - This distribution is intended for evaluation, testing, and research use of DeepMimic.
 - The launcher simply invokes the embedded Python interpreter with the appropriate arguments. It does not modify the original DeepMimic behavior.
 - For detailed information about the original project, refer to the official repository.
+- Rendering during training is not supported. To inspect training progress, run `DeepMimic.py` with `--model_files output/agent0_model.ckpt` from the command line (or edit `args/run_custom_args.txt` and use `run.bat` → Custom motion).
 
+## Modifications to Original Code
+
+The simulation, scenes, and the learning algorithm itself are unmodified from the original DeepMimic repository. The modifications listed below do not change how the agent learns or how the simulation behaves; they only add supporting functionality.
+
+### Modified files
+
+- `learning/tf_agent.py`: `save_model` now writes an accompanying `_state.json` file next to each checkpoint. `load_model` reads this file and restores the iteration counter and total sample count.
+- `learning/rl_agent.py`: `_train` adds the restored sample count to the running total, so the exploration and learning-rate annealing schedule continues from where it stopped.
+- `mpi_run.py`: `python3` replaced with the path to the embedded Python interpreter for Windows compatibility.
+
+### Added files (not modifications to the original code)
+
+- `run.bat`, `train.bat` (launchers)
+- `convert_motion.bat`, `motion_converter/` (BVH converter)
+- `args/train_custom_motion_args.txt`, `args/run_custom_args.txt` (templates)
+- `prerequisites/` (Microsoft MPI installers)
+- `InputBvh/`, `data/motions/custom/` (folders for user motions)
 
 ## License
 
